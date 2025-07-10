@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Searchable Store Map</title>
+    <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .search-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      padding: 10px 15px;
+      width: 100%;
+      z-index: 10;
+    }
+
+    #search {
+      width: 100%;
+      max-width: 500px;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .suggestions {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 0;
+      list-style: none;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      position: absolute;
+      width: calc(100% - 30px);
+      z-index: 1000;
+    }
+
+    .suggestions li {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .suggestions li:hover {
+      background: #f0f0f0;
+    }
+
+    .map-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      flex: 1;
+    }
+
+    #store-map {
+      width: 100%;
+      height: auto;
+      display: block;
+      transform: rotate(180deg);
+    }
+
+    #highlights {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .highlight {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: red;
+      border-radius: 50%;
+      border: 2px solid white;
+      transform: translate(-50%, -50%);
+    }
+  
+    @media (max-width: 768px) {
+      #search {
+        max-width: 100%;
+      }
+      .search-container {
+        max-width: 100%;
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <h2>Search Brand or Unit</h2>
+    <div class="search-container">
+      <input type="text" id="search" placeholder="Type brand or unit ID..." />
+    </div>
+
+    <div class="map-container">
+      <img id="store-map" src="./store_map.svg" alt="Store Map" />
+      <div id="highlights"></div>
+    </div>
+
+    <script>
+    const units = [
+      { id: "A1", brand: "", x: 196, y: 381 },
+      { id: "A2", brand: "Comma", x: 196, y: 362 },
+      { id: "A3", brand: "", x: 196, y: 333 },
+      { id: "A4", brand: "", x: 196, y: 314 },
+      { id: "A5", brand: "", x: 196, y: 294 },
+      { id: "A6", brand: "", x: 197, y: 274 },
+      { id: "A7", brand: "", x: 197, y: 253 },
+      { id: "A8", brand: "", x: 177, y: 233 },
+      { id: "A9", brand: "", x: 157, y: 233 },
+      { id: "A10", brand: "", x: 138, y: 234 },
+      { id: "A11", brand: "", x: 110, y: 212 },
+      { id: "A12", brand: "", x: 110, y: 192 },
+      { id: "A13", brand: "", x: 109, y: 172 },
+      { id: "A14", brand: "", x: 109, y: 145 },
+      { id: "A15", brand: "", x: 110, y: 125 },
+      { id: "A16", brand: "", x: 110, y: 105 },
+      { id: "A17", brand: "", x: 123, y: 29 },
+      { id: "A18", brand: "", x: 182, y: 29 },
+      { id: "A19", brand: "", x: 324, y: 28 },
+      { id: "A20", brand: "", x: 352, y: 42 },
+      { id: "A21", brand: "", x: 350, y: 62 },
+      { id: "A22", brand: "", x: 305, y: 28 },
+      { id: "A23", brand: "", x: 295, y: 39 },
+      { id: "A24", brand: "", x: 350, y: 276 },
+			{ id: "A25", brand: "Tres", x: 350, y: 295 },
+      { id: "A26", brand: "", x: 349, y: 314 },
+      { id: "A27", brand: "", x: 349, y: 334 },
+      { id: "A28", brand: "", x: 349, y: 362 },
+      { id: "A29", brand: "", x: 349, y: 381 },
+      { id: "A'1", brand: "", x: 141, y: 29 },
+      { id: "A'2", brand: "", x: 162, y: 29 },
+      { id: "A'3", brand: "", x: 349, y: 381 },
+      { id: "B1", brand: "", x: 233, y: 382 },
+      { id: "B2", brand: "", x: 223, y: 382 },
+      { id: "B3", brand: "", x: 233, y: 352 },
+      { id: "B4", brand: "", x: 224, y: 349 },
+      { id: "B5", brand: "", x: 225, y: 310 },
+      { id: "B6", brand: "", x: 216, y: 311 },
+      { id: "B7", brand: "", x: 227, y: 266 },
+      { id: "B8", brand: "", x: 218, y: 236 },
+      { id: "B9", brand: "", x: 229, y: 243 },
+      { id: "B10", brand: "", x: 217, y: 270 },
+      { id: "B11", brand: "", x: 324, y: 382 },
+      { id: "B12", brand: "", x: 323, y: 353 },
+      { id: "B13", brand: "", x: 314, y: 381 },
+      { id: "B14", brand: "", x: 313, y: 353 },
+      { id: "B15", brand: "", x: 332, y: 310 },
+      { id: "B16", brand: "", x: 321, y: 312 },
+      { id: "B17", brand: "", x: 329, y: 272 },
+      { id: "B18", brand: "", x: 318, y: 266 },
+      { id: "C1", brand: "", x: 246, y: 314 },
+      { id: "C2", brand: "", x: 256, y: 315 },
+      { id: "C3", brand: "", x: 268, y: 314 },
+      { id: "C4", brand: "", x: 279, y: 315 },
+      { id: "C5", brand: "", x: 291, y: 315 },
+      { id: "C6", brand: "", x: 302, y: 315 },
+      { id: "C7", brand: "", x: 245, y: 276 },
+      { id: "C8", brand: "", x: 256, y: 275 },
+      { id: "C9", brand: "", x: 269, y: 275 },
+      { id: "C10", brand: "", x: 279, y: 275 },
+      { id: "C11", brand: "", x: 291, y: 275 },
+      { id: "C12", brand: "", x: 302, y: 275 },
+      { id: "C13", brand: "", x: 245, y: 203 },
+      { id: "C14", brand: "", x: 256, y: 203 },
+      { id: "C15", brand: "", x: 268, y: 203 },
+      { id: "C16", brand: "", x: 279, y: 203 },
+      { id: "C17", brand: "", x: 290, y: 203 },
+      { id: "C18", brand: "", x: 301, y: 203 },
+      { id: "C19", brand: "", x: 347, y: 173 },
+      { id: "D1", brand: "Locco", x: 164, y: 188 },
+      { id: "D2", brand: "", x: 171, y: 171 },
+      { id: "D3", brand: "", x: 158, y: 170 },
+      { id: "D4", brand: "", x: 164, y: 149 },
+      { id: "D5", brand: "", x: 134, y: 191 },
+      { id: "D6", brand: "", x: 139, y: 170 },
+      { id: "D7", brand: "", x: 127, y: 169 },
+      { id: "D8", brand: "", x: 134, y: 150 },
+      { id: "D9", brand: "Haze", x: 164, y: 139 },
+      { id: "D10", brand: "", x: 171, y: 119 },
+      { id: "D11", brand: "", x: 157, y: 119 },
+      { id: "D12", brand: "", x: 165, y: 97 },
+      { id: "D13", brand: "", x: 134, y: 139 },
+      { id: "D14", brand: "", x: 141, y: 118 },
+      { id: "D15", brand: "Lucent", x: 126, y: 118 },
+      { id: "D16", brand: "", x: 135, y: 99 },
+      { id: "D17", brand: "", x: 165, y: 87 },
+      { id: "D18", brand: "", x: 171, y: 67 },
+      { id: "D19", brand: "", x: 158, y: 67 },
+      { id: "D20", brand: "", x: 165, y: 46 },
+      { id: "D21", brand: "", x: 134, y: 87 },
+      { id: "D22", brand: "", x: 140, y: 67 },
+      { id: "D23", brand: "", x: 127, y: 67 },
+      { id: "D24", brand: "", x: 134, y: 46 },
+      { id: "D25", brand: "", x: 186, y: 212 },
+      { id: "D26", brand: "", x: 166, y: 204 },
+      { id: "D27", brand: "", x: 146, y: 203 },
+      { id: "D28", brand: "", x: 165, y: 218 },
+      { id: "D29", brand: "", x: 146, y: 218 },
+      { id: "D30", brand: "", x: 125, y: 212 },
+      { id: "E1", brand: "", x: 197, y: 170 },
+      { id: "E2", brand: "", x: 185, y: 163 },
+      { id: "E3", brand: "", x: 185, y: 148 },
+      { id: "E4", brand: "GOGO", x: 185, y: 138 },
+      { id: "E5", brand: "GOGO", x: 185, y: 128 },
+			{ id: "E6", brand: "GOGO", x: 185, y: 118 },
+      { id: "E7", brand: "", x: 184, y: 107 },
+      { id: "E8", brand: "", x: 185, y: 97 },
+      { id: "E9", brand: "", x: 185, y: 87 },
+      { id: "E10", brand: "", x: 185, y: 69 },
+      { id: "E11", brand: "", x: 198, y: 64 },
+    ];
+    const mapImg = document.getElementById("store-map");
+const highlights = document.getElementById("highlights");
+const searchInput = document.getElementById("search");
+
+searchInput.addEventListener("input", (e) => {
+  const val = e.target.value.toLowerCase().trim();
+
+  if (!val) {
+    highlights.innerHTML = "";
+    return;
+  }
+  
+  const matches = units.filter(
+    (u) =>
+      u.id.toLowerCase().includes(val) ||
+      (u.brand && u.brand.toLowerCase().includes(val))
+  );
+
+  
+  highlights.innerHTML = "";
+
+
+  if (matches.length === 0) return;
+
+
+  const scaleX = mapImg.width / mapImg.naturalWidth;
+  const scaleY = mapImg.height / mapImg.naturalHeight;
+
+  matches.forEach((match) => {
+    const flippedX = mapImg.naturalWidth - match.x;
+    const flippedY = mapImg.naturalHeight - match.y;
+
+    const el = document.createElement("div");
+    el.className = "highlight";
+    el.style.left = flippedX * scaleX + "px";
+    el.style.top = flippedY * scaleY + "px";
+
+    highlights.appendChild(el);
+  });
+});
+</script>
+  </body>
+</html>
