@@ -286,7 +286,7 @@
         }
 
         // Highlight a point on the map
-        function highlightStore(x, y) {
+        function highlightUnit(x, y) {
             const coords = getRelativeCoords(x, y);
             highlightPoint.style.left = `${coords.x}px`;
             highlightPoint.style.top = `${coords.y}px`;
@@ -323,7 +323,7 @@
                     searchBar.value = match;
                     suggestions.style.display = 'none';
                     const location = storeData[match];
-                    highlightStore(location.x, location.y);
+                    highlightUnit(location.x, location.y);
                 });
                 suggestions.appendChild(div);
             });
@@ -340,7 +340,7 @@
                 const input = searchBar.value.trim();
                 if (storeData[input]) {
                     const location = storeData[input];
-                    highlightStore(location.x, location.y);
+                    highlightUnit(location.x, location.y);
                 }
                 suggestions.style.display = 'none';
             }
@@ -356,7 +356,7 @@
             const searchTerm = searchBar.value.trim();
             if (searchTerm && storeData[searchTerm]) {
                 const location = storeData[searchTerm];
-                highlightStore(location.x, location.y);
+                highlightUnit(location.x, location.y);
             }
         }
 
