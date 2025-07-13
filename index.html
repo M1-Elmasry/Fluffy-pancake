@@ -1,266 +1,367 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Searchable Store Map</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand's Unit Locator</title>
     <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .search-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      padding: 10px 15px;
-      width: 100%;
-      z-index: 10;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
 
-    #search {
-      width: 100%;
-      max-width: 500px;
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-    .suggestions {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 0;
-      list-style: none;
-      background: white;
-      border: 1px solid #ccc;
-      border-top: none;
-      position: absolute;
-      width: calc(100% - 30px);
-      z-index: 1000;
-    }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
 
-    .suggestions li {
-      padding: 10px;
-      cursor: pointer;
-    }
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-    .suggestions li:hover {
-      background: #f0f0f0;
-    }
+        #search-bar {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
 
-    .map-container {
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      flex: 1;
-    }
+        #search-bar:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
 
-    #store-map {
-      width: 100%;
-      height: auto;
-      display: block;
-      transform: rotate(180deg);
-    }
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 0 0 4px 4px;
+            border-top: none;
+            display: none;
+            z-index: 1000;
+        }
 
-    #highlights {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
 
-    .highlight {
-      position: absolute;
-      width: 12px;
-      height: 12px;
-      background: red;
-      border-radius: 50%;
-      border: 2px solid white;
-      transform: translate(-50%, -50%);
-    }
-  
-    @media (max-width: 768px) {
-      #search {
-        max-width: 100%;
-      }
-      .search-container {
-        max-width: 100%;
-      }
-    }
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        #map-container {
+            width: 100%;
+            position: relative;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #store-map {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .highlight-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .highlight-point.active {
+            opacity: 1;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            #search-bar {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <h2>Search Brand or Unit</h2>
-    <div class="search-container">
-      <input type="text" id="search" placeholder="Type brand or unit ID..." />
-    </div>
-
-    <div class="map-container">
-      <img id="store-map" src="./store_map.svg" alt="Store Map" />
-      <div id="highlights"></div>
+</head>
+<body>
+    <div class="container">
+        <h1>Brand's Unit Locator</h1>
+        <div class="search-container">
+            <input type="text" id="search-bar" placeholder="Search for a brand..." autocomplete="off">
+            <div id="suggestions"></div>
+        </div>
+        <div id="map-container">
+            <img id="store-map" src="./store_map.svg" alt="Store Map">
+            <div id="map-overlay"></div>
+        </div>
     </div>
 
     <script>
-    const units = [
-      { id: "A1", brand: "", x: 196, y: 381 },
-      { id: "A2", brand: "Comma", x: 196, y: 362 },
-      { id: "A3", brand: "", x: 196, y: 333 },
-      { id: "A4", brand: "", x: 196, y: 314 },
-      { id: "A5", brand: "", x: 196, y: 294 },
-      { id: "A6", brand: "", x: 197, y: 274 },
-      { id: "A7", brand: "", x: 197, y: 253 },
-      { id: "A8", brand: "", x: 177, y: 233 },
-      { id: "A9", brand: "", x: 157, y: 233 },
-      { id: "A10", brand: "", x: 138, y: 234 },
-      { id: "A11", brand: "", x: 110, y: 212 },
-      { id: "A12", brand: "", x: 110, y: 192 },
-      { id: "A13", brand: "", x: 109, y: 172 },
-      { id: "A14", brand: "", x: 109, y: 145 },
-      { id: "A15", brand: "", x: 110, y: 125 },
-      { id: "A16", brand: "", x: 110, y: 105 },
-      { id: "A17", brand: "", x: 123, y: 29 },
-      { id: "A18", brand: "", x: 182, y: 29 },
-      { id: "A19", brand: "", x: 324, y: 28 },
-      { id: "A20", brand: "", x: 352, y: 42 },
-      { id: "A21", brand: "", x: 350, y: 62 },
-      { id: "A22", brand: "", x: 305, y: 28 },
-      { id: "A23", brand: "", x: 295, y: 39 },
-      { id: "A24", brand: "", x: 350, y: 276 },
-			{ id: "A25", brand: "Tres", x: 350, y: 295 },
-      { id: "A26", brand: "", x: 349, y: 314 },
-      { id: "A27", brand: "", x: 349, y: 334 },
-      { id: "A28", brand: "", x: 349, y: 362 },
-      { id: "A29", brand: "", x: 349, y: 381 },
-      { id: "A'1", brand: "", x: 141, y: 29 },
-      { id: "A'2", brand: "", x: 162, y: 29 },
-      { id: "A'3", brand: "", x: 349, y: 381 },
-      { id: "B1", brand: "", x: 233, y: 382 },
-      { id: "B2", brand: "", x: 223, y: 382 },
-      { id: "B3", brand: "", x: 233, y: 352 },
-      { id: "B4", brand: "", x: 224, y: 349 },
-      { id: "B5", brand: "", x: 225, y: 310 },
-      { id: "B6", brand: "", x: 216, y: 311 },
-      { id: "B7", brand: "", x: 227, y: 266 },
-      { id: "B8", brand: "", x: 218, y: 236 },
-      { id: "B9", brand: "", x: 229, y: 243 },
-      { id: "B10", brand: "", x: 217, y: 270 },
-      { id: "B11", brand: "", x: 324, y: 382 },
-      { id: "B12", brand: "", x: 323, y: 353 },
-      { id: "B13", brand: "", x: 314, y: 381 },
-      { id: "B14", brand: "", x: 313, y: 353 },
-      { id: "B15", brand: "", x: 332, y: 310 },
-      { id: "B16", brand: "", x: 321, y: 312 },
-      { id: "B17", brand: "", x: 329, y: 272 },
-      { id: "B18", brand: "", x: 318, y: 266 },
-      { id: "C1", brand: "", x: 246, y: 314 },
-      { id: "C2", brand: "", x: 256, y: 315 },
-      { id: "C3", brand: "", x: 268, y: 314 },
-      { id: "C4", brand: "", x: 279, y: 315 },
-      { id: "C5", brand: "", x: 291, y: 315 },
-      { id: "C6", brand: "", x: 302, y: 315 },
-      { id: "C7", brand: "", x: 245, y: 276 },
-      { id: "C8", brand: "", x: 256, y: 275 },
-      { id: "C9", brand: "", x: 269, y: 275 },
-      { id: "C10", brand: "", x: 279, y: 275 },
-      { id: "C11", brand: "", x: 291, y: 275 },
-      { id: "C12", brand: "", x: 302, y: 275 },
-      { id: "C13", brand: "", x: 245, y: 203 },
-      { id: "C14", brand: "", x: 256, y: 203 },
-      { id: "C15", brand: "", x: 268, y: 203 },
-      { id: "C16", brand: "", x: 279, y: 203 },
-      { id: "C17", brand: "", x: 290, y: 203 },
-      { id: "C18", brand: "", x: 301, y: 203 },
-      { id: "C19", brand: "", x: 347, y: 173 },
-      { id: "D1", brand: "Locco", x: 164, y: 188 },
-      { id: "D2", brand: "", x: 171, y: 171 },
-      { id: "D3", brand: "", x: 158, y: 170 },
-      { id: "D4", brand: "", x: 164, y: 149 },
-      { id: "D5", brand: "", x: 134, y: 191 },
-      { id: "D6", brand: "", x: 139, y: 170 },
-      { id: "D7", brand: "", x: 127, y: 169 },
-      { id: "D8", brand: "", x: 134, y: 150 },
-      { id: "D9", brand: "Haze", x: 164, y: 139 },
-      { id: "D10", brand: "", x: 171, y: 119 },
-      { id: "D11", brand: "", x: 157, y: 119 },
-      { id: "D12", brand: "", x: 165, y: 97 },
-      { id: "D13", brand: "", x: 134, y: 139 },
-      { id: "D14", brand: "", x: 141, y: 118 },
-      { id: "D15", brand: "Lucent", x: 126, y: 118 },
-      { id: "D16", brand: "", x: 135, y: 99 },
-      { id: "D17", brand: "", x: 165, y: 87 },
-      { id: "D18", brand: "", x: 171, y: 67 },
-      { id: "D19", brand: "", x: 158, y: 67 },
-      { id: "D20", brand: "", x: 165, y: 46 },
-      { id: "D21", brand: "", x: 134, y: 87 },
-      { id: "D22", brand: "", x: 140, y: 67 },
-      { id: "D23", brand: "", x: 127, y: 67 },
-      { id: "D24", brand: "", x: 134, y: 46 },
-      { id: "D25", brand: "", x: 186, y: 212 },
-      { id: "D26", brand: "", x: 166, y: 204 },
-      { id: "D27", brand: "", x: 146, y: 203 },
-      { id: "D28", brand: "", x: 165, y: 218 },
-      { id: "D29", brand: "", x: 146, y: 218 },
-      { id: "D30", brand: "", x: 125, y: 212 },
-      { id: "E1", brand: "", x: 197, y: 170 },
-      { id: "E2", brand: "", x: 185, y: 163 },
-      { id: "E3", brand: "", x: 185, y: 148 },
-      { id: "E4", brand: "GOGO", x: 185, y: 138 },
-      { id: "E5", brand: "GOGO", x: 185, y: 128 },
-			{ id: "E6", brand: "GOGO", x: 185, y: 118 },
-      { id: "E7", brand: "", x: 184, y: 107 },
-      { id: "E8", brand: "", x: 185, y: 97 },
-      { id: "E9", brand: "", x: 185, y: 87 },
-      { id: "E10", brand: "", x: 185, y: 69 },
-      { id: "E11", brand: "", x: 198, y: 64 },
-    ];
-    const mapImg = document.getElementById("store-map");
-const highlights = document.getElementById("highlights");
-const searchInput = document.getElementById("search");
-
-searchInput.addEventListener("input", (e) => {
-  const val = e.target.value.toLowerCase().trim();
-
-  if (!val) {
-    highlights.innerHTML = "";
-    return;
-  }
-  
-  const matches = units.filter(
-    (u) =>
-      u.id.toLowerCase().includes(val) ||
-      (u.brand && u.brand.toLowerCase().includes(val))
-  );
-
-  
-  highlights.innerHTML = "";
+        const storeData = {
+            "Haze": { "id": "A1", "x": 196, "y": 381 },
+            "Bucks": { "id": "A2", "x": 196, "y": 362 },
+            "Masarra": {"id": "A3", "x": 196, "y": 333},
+            "Secret": {"id": "A4", "x": 196, "y": 314},
+            "Dalivo": {"id": "A5", "x": 196, "y": 294},
+            "Cozed": {"id": "A6", "x": 197, "y": 274},
+            "Mzaco": {"id": "A7", "x": 197, "y": 253},
+            "KC Shop": {"id": "A8", "x": 177, "y": 233},
+            "Essentials": {"id": "A9", "x": 157, "y": 233},
+            "Eiei": {"id": "A10", "x": 138, "y": 234},
+            "Blameworthy": {"id": "A11", "x": 110, "y": 212},
+            "Grounded": {"id": "A12", "x": 110, "y": 192},
+            "The Blanks": {"id": "A13", "x": 109, "y": 172},
+            "Freyya": {"id": "A14", "x": 109, "y": 145},
+            "Astra": {"id": "A15", "x": 110, "y": 125},
+            "Dryp": {"id": "A16", "x": 110, "y": 105},
+            "The MD": {"id": "A17", "x": 123, "y": 29},
+            "Breathe": {"id": "A18", "x": 182, "y": 29},
+            "Kemetawy": {"id": "A19", "x": 324, "y": 28},
+            "Ninety": {"id": "A20", "x": 352, "y": 42},
+            "The Selffish": {"id": "A21", "x": 350, "y": 62},
+            "Postd": {"id": "A23", "x": 295, "y": 39},
+            "Kalabsh": {"id": "A24", "x": 350, "y": 276},
+            "Yonyo": {"id": "A25", "x": 350, "y": 295},
+            "Urban Basics": {"id": "A26", "x": 349, "y": 314},
+            "Jamil": {"id": "A27", "x": 349, "y": 334},
+            "Off Limit": {"id": "A28", "x": 349, "y": 362},
+            "Comma": {"id": "A29", "x": 349, "y": 381},
+            "No Identity": {"id": "A'1", "x": 141, "y": 29},
+            "Clother": {"id": "A'2", "x": 162, "y": 29},
+            "Kuji": {"id": "A'3", "x": 349, "y": 381},
+            "Ordinary Product": {"id": "B1", "x": 233, "y": 382},
+            "CTRL": {"id": "B2", "x": 223, "y": 382},
+            "Plein De Vie": {"id": "B3", "x": 233, "y": 352},
+            "Zedzee": {"id": "B4", "x": 224, "y": 349},
+            "Slack": {"id": "B5", "x": 225, "y": 310},
+            "Navy": {"id": "B6", "x": 216, "y": 311},
+            "Diss & Miss": {"id": "B7", "x": 227, "y": 266},
+            "Maison De Chris": {"id": "B8", "x": 218, "y": 236},
+            "27": {"id": "B10", "x": 217, "y": 270},
+            "Antika": {"id": "B11", "x": 324, "y": 382},
+            "Decked Out": {"id": "B12", "x": 323, "y": 353},
+            "BLAC": {"id": "B13", "x": 314, "y": 381},
+            "Frenchee": {"id": "B14", "x": 313, "y": 353},
+            "SOL Denim": {"id": "B15", "x": 332, "y": 310},
+            "Psych": {"id": "B16", "x": 321, "y": 312},
+            "Gabris": {"id": "B17", "x": 329, "y": 272},
+            "Eira": {"id": "B18", "x": 318, "y": 266},
+            "Mojo": {"id": "C1", "x": 246, "y": 314},
+            "Valerian": {"id": "C2", "x": 256, "y": 315},
+            "Comfo Wear": {"id": "C3", "x": 268, "y": 314},
+            "Nwara": {"id": "C4", "x": 279, "y": 315},
+            "Cave": {"id": "C5", "x": 291, "y": 315},
+            "Noah": {"id": "C6", "x": 302, "y": 315},
+            "Amgaad": {"id": "C7", "x": 245, "y": 276},
+            "By Everland": {"id": "C8", "x": 256, "y": 275},
+            "NE1": {"id": "C9", "x": 269, "y": 275},
+            "Konga": {"id": "C10", "x": 279, "y": 275},
+            "Moosy": {"id": "C11", "x": 291, "y": 275},
+            "Blancka": {"id": "C12", "x": 302, "y": 275},
+            "Kush": {"id": "C13", "x": 245, "y": 203},
+            "Murenzo": {"id": "C14", "x": 256, "y": 203},
+            "NAS Trends": {"id": "C15", "x": 268, "y": 203},
+            "Leocansa": {"id": "C16", "x": 279, "y": 203},
+            "Tres": {"id": "C17", "x": 290, "y": 203},
+            "Ducky": {"id": "C18", "x": 301, "y": 203},
+            "Kloves": {"id": "C19", "x": 347, "y": 173},
+            "Votch": {"id": "D1", "x": 164, "y": 188},
+            "Gaia": {"id": "D2", "x": 171, "y": 171},
+            "Richness": {"id": "D3", "x": 158, "y": 170},
+            "Authentic & Young": {"id": "D4", "x": 164, "y": 149},
+            "Fragile": {"id": "D5", "x": 134, "y": 191},
+            "No Clue": {"id": "D6", "x": 139, "y": 170},
+            "Broek": {"id": "D7", "x": 127, "y": 169},
+            "Lark": {"id": "D8", "x": 134, "y": 150},
+            "BRKT": {"id": "D9", "x": 164, "y": 139},
+            "Design KAF": {"id": "D10", "x": 171, "y": 119},
+            "Oshe": {"id": "D11", "x": 157, "y": 119},
+            "Lucente": {"id": "D12", "x": 165, "y": 97},
+            "Locco": {"id": "D13", "x": 134, "y": 139},
+            "VampD": {"id": "D14", "x": 141, "y": 118},
+            "Miraza": {"id": "D15", "x": 126, "y": 118},
+            "CLYPT": {"id": "D16", "x": 135, "y": 99},
+            "Street 15": {"id": "D17", "x": 165, "y": 87},
+            "Furd Cloud": {"id": "D18", "x": 171, "y": 67},
+            "Owl": {"id": "Johnson", "x": 158, "y": 67},
+            "Unauthorized": {"id": "D20", "x": 165, "y": 46},
+            "Woke": {"id": "D21", "x": 134, "y": 87},
+            "Nwara (NEW)": {"id": "D22", "x": 140, "y": 67},
+            "Esca": {"id": "D23", "x": 127, "y": 67},
+            "TPA & Pink Rumors": {"id": "D24", "x": 134, "y": 46},
+            "Denjoe": {"id": "D25", "x": 186, "y": 212},
+            "KNTD": {"id": "D26", "x": 166, "y": 204},
+            "Kanza": {"id": "D27", "x": 146, "y": 203},
+            "Versattire": {"id": "D28", "x": 165, "y": 218},
+            "Deeda": {"id": "E1", "x": 197, "y": 170},
+            "Zuri": {"id": "E2", "x": 185, "y": 163},
+            "Loose Style": {"id": "E3", "x": 185, "y": 148},
+            "Era": {"id": "E4", "x": 185, "y": 138},
+            "Sajoie": {"id": "E5", "x": 185, "y": 128},
+            "Helio": {"id": "E6", "x": 185, "y": 118},
+            "Gogoo": {"id": "E7", "x": 184, "y": 107},
+            "Rayam": {"id": "E11", "x": 198, "y": 64}
 
 
-  if (matches.length === 0) return;
+        };
 
+        const searchBar = document.getElementById('search-bar');
+        const suggestions = document.getElementById('suggestions');
+        const storeMap = document.getElementById('store-map');
+        const mapOverlay = document.getElementById('map-overlay');
 
-  const scaleX = mapImg.width / mapImg.naturalWidth;
-  const scaleY = mapImg.height / mapImg.naturalHeight;
+        const highlightPoint = document.createElement('div');
+        highlightPoint.className = 'highlight-point';
+        mapOverlay.appendChild(highlightPoint);
 
-  matches.forEach((match) => {
-    const flippedX = mapImg.naturalWidth - match.x;
-    const flippedY = mapImg.naturalHeight - match.y;
+        function getRelativeCoords(x, y) {
+            const rect = storeMap.getBoundingClientRect();
+            const naturalWidth = storeMap.naturalWidth || rect.width;
+            const naturalHeight = storeMap.naturalHeight || rect.height;
+            
+            return {
+                x: (x / naturalWidth) * rect.width,
+                y: (y / naturalHeight) * rect.height
+            };
+        }
 
-    const el = document.createElement("div");
-    el.className = "highlight";
-    el.style.left = flippedX * scaleX + "px";
-    el.style.top = flippedY * scaleY + "px";
+        // Highlight a point on the map
+        function highlightStore(x, y) {
+            const coords = getRelativeCoords(x, y);
+            highlightPoint.style.left = `${coords.x}px`;
+            highlightPoint.style.top = `${coords.y}px`;
+            highlightPoint.classList.add('active');
+        }
 
-    highlights.appendChild(el);
-  });
-});
-</script>
-  </body>
+        function clearHighlight() {
+            highlightPoint.classList.remove('active');
+        }
+
+        function showSuggestions(input) {
+            suggestions.innerHTML = '';
+            
+            if (input.length < 1) {
+                suggestions.style.display = 'none';
+                clearHighlight();
+                return;
+            }
+            
+            const matches = Object.keys(storeData).filter(name => 
+                name.toLowerCase().includes(input.toLowerCase())
+            );
+            
+            if (matches.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            
+            matches.slice(0, 5).forEach(match => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = match;
+                div.addEventListener('click', () => {
+                    searchBar.value = match;
+                    suggestions.style.display = 'none';
+                    const location = storeData[match];
+                    highlightStore(location.x, location.y);
+                });
+                suggestions.appendChild(div);
+            });
+            
+            suggestions.style.display = 'block';
+        }
+
+        searchBar.addEventListener('input', () => {
+            showSuggestions(searchBar.value);
+        });
+
+        searchBar.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const input = searchBar.value.trim();
+                if (storeData[input]) {
+                    const location = storeData[input];
+                    highlightStore(location.x, location.y);
+                }
+                suggestions.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchBar.contains(e.target) && !suggestions.contains(e.target)) {
+                suggestions.style.display = 'none';
+            }
+        });
+
+        function handlePositionUpdate() {
+            const searchTerm = searchBar.value.trim();
+            if (searchTerm && storeData[searchTerm]) {
+                const location = storeData[searchTerm];
+                highlightStore(location.x, location.y);
+            }
+        }
+
+        storeMap.addEventListener('load', handlePositionUpdate);
+        window.addEventListener('resize', handlePositionUpdate);
+    </script>
+</body>
 </html>
