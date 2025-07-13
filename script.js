@@ -7,33 +7,19 @@ const highlightPoint = document.createElement("div");
 highlightPoint.className = "highlight-point";
 mapOverlay.appendChild(highlightPoint);
 
-function rotate180(x, y, image) {
-  const displayedWidth = image.clientWidth;
-  const displayedHeight = image.clientHeight;
-  
-  const naturalWidth = image.naturalWidth || displayedWidth;
-  const naturalHeight = image.naturalHeight || displayedHeight;
-  
-  const scaleX = displayedWidth / naturalWidth;
-  const scaleY = displayedHeight / naturalHeight;
-  
-  const rotatedX = naturalWidth - x;
-  const rotatedY = naturalHeight - y;
-  
-  return {
-    x: rotatedX * scaleX,
-    y: rotatedY * scaleY
-  };
-}
+// function rotate180(x, y, image) {
+//   const rotatedX = image.naturalWidth - x;
+//   const rotatedY = image.naturalHeight - y;
+//   return { x: rotatedX, y: rotatedY };
+// }
 
 function highlightUnit(x, y) {
-  const coords = rotate180(x, y, storeMap);
-  
-  highlightPoint.style.left = `${coords.x}px`;
-  highlightPoint.style.top = `${coords.y}px`;
+  const scaleX = storeMap.clientWidth / storeMap.naturalWidth;
+  const scaleY = storeMap.clientHeight / storeMap.naturalHeight;
+  // const rotated = rotate180(x, y, storeMap);
+  highlightPoint.style.left = `${x * scaleX}px`;
+  highlightPoint.style.top = `${y * scaleY}px`;
   highlightPoint.classList.add("active");
-  
-  console.log(`Highlighting at: ${coords.x}, ${coords.y}`);
 }
 
 function clearHighlight() {
@@ -95,8 +81,6 @@ document.addEventListener("click", (e) => {
 });
 
 function handlePositionUpdate() {
-  if (storeMap.clientWidth === 0 || storeMap.clientHeight === 0) return;
-  
   const searchTerm = searchBar.value.trim();
   if (searchTerm && storeData[searchTerm]) {
     const location = storeData[searchTerm];
@@ -104,14 +88,5 @@ function handlePositionUpdate() {
   }
 }
 
-function waitForImageLoad() {
-  if (storeMap.complete && storeMap.naturalWidth !== 0) {
-    handlePositionUpdate();
-  } else {
-    storeMap.addEventListener('load', handlePositionUpdate);
-    storeMap.addEventListener('error', () => console.error('Image failed to load'));
-  }
-}
-
-waitForImageLoad();
+storeMap.addEventListener("load", handlePositionUpdate);
 window.addEventListener("resize", handlePositionUpdate);
