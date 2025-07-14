@@ -7,16 +7,10 @@ const highlightPoint = document.createElement("div");
 highlightPoint.className = "highlight-point";
 mapOverlay.appendChild(highlightPoint);
 
-// function rotate180(x, y, image) {
-//   const rotatedX = image.naturalWidth - x;
-//   const rotatedY = image.naturalHeight - y;
-//   return { x: rotatedX, y: rotatedY };
-// }
-
 function highlightUnit(x, y) {
-  const scaleX = storeMap.clientWidth / storeMap.naturalWidth;
-  const scaleY = storeMap.clientHeight / storeMap.naturalHeight;
-  // const rotated = rotate180(x, y, storeMap);
+  const rect = storeMap.getBoundingClientRect();
+  const scaleX = rect.width / storeMap.naturalWidth;
+  const scaleY = rect.height / storeMap.naturalHeight;
   highlightPoint.style.left = `${x * scaleX}px`;
   highlightPoint.style.top = `${y * scaleY}px`;
   highlightPoint.classList.add("active");
